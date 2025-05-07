@@ -10,6 +10,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const chefRoutes = require('./routes/chefRoutes');
 const categoryTagRoutes = require('./routes/categoryTagRoutes');
 const recipeRoutes = require('./routes/recipeRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 
 const app = express();
 
@@ -17,13 +18,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chef', chefRoutes);
 app.use('/api/categoryTag', categoryTagRoutes);
 app.use('/api/recipe', recipeRoutes);
-
+app.use('/api/comment', commentRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
