@@ -1,4 +1,4 @@
-// model/recipeModel.js
+// model/recipeModel.js - Update the schema
 const mongoose = require("mongoose");
 
 const recipeSchema = new mongoose.Schema({
@@ -27,10 +27,34 @@ const recipeSchema = new mongoose.Schema({
   chefUsername: { type: String, required: true },
   chefNumber: { type: String, required: true },
   
-  // New view count field with default value of 0
+  // View count field
   viewCount: { type: Number, default: 0 },
+  
+  // Changed the type to support both ObjectIds and string IDs
+  likes: { 
+    type: [mongoose.Schema.Types.Mixed], 
+    default: [] 
+  },
+  dislikes: { 
+    type: [mongoose.Schema.Types.Mixed], 
+    default: [] 
+  },
   
   createdAt: { type: Date, default: Date.now },
 });
+
+// Virtual property for like count
+recipeSchema.virtual('likeCount').get(function() {
+  return this.likes.length;
+});
+
+// Virtual property for dislike count
+recipeSchema.virtual('dislikeCount').get(function() {
+  return this.dislikes.length;
+});
+
+// Ensure virtuals are included when converting to JSON
+recipeSchema.set('toJSON', { virtuals: true });
+recipeSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model("Recipe", recipeSchema);

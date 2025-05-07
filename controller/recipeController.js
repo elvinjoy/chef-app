@@ -1,14 +1,18 @@
 // controller/recipeController.js
 
-// Import the Recipe model for the getRecipeController
+// Import the Recipe model and User model
 const Recipe = require('../model/recipeModel');
+const User = require('../model/userModel'); // Make sure to import the User model
 
 // Import the business logic functions
 const { 
   createRecipe, 
   updateRecipeById, 
   deleteRecipeById, 
-  getPopularRecipes 
+  getPopularRecipes,
+  toggleLikeRecipe,
+  toggleDislikeRecipe,
+  getMostLikedRecipes 
 } = require('../functions/recipeFunction');
 
 /**
@@ -248,10 +252,185 @@ async function getPopularRecipesController(req, res) {
   }
 }
 
+/**
+ * Toggle like for a recipe - Compatible with both user and chef authentication
+ */
+async function likeRecipeController(req, res) {
+  try {
+    const recipeId = req.params.id;
+    
+    // For compatibility with both user and chef authentication
+    const userId = req.userId || (req.chef && req.chef._id);
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+    
+    // Create a user object that has _id property (needed by toggleLikeRecipe)
+    const user = { _id: userId };
+    
+    // Use the business logic function
+    const result = await toggleLikeRecipe(recipeId, user);
+    
+    return res.status(200).json({
+      success: true,
+      message: result.liked ? 'Recipe liked successfully' : 'Recipe unliked successfully',
+      data: {
+        liked: result.liked,
+        disliked: result.disliked,
+        likeCount: result.recipe.likes.length,
+        dislikeCount: result.recipe.dislikes.length
+      }
+    });
+  } catch (err) {
+    console.error('Like recipe error:', err);
+    
+    // Return appropriate status code based on error type
+    if (err.message === 'Recipe not found') {
+      return res.status(404).json({ success: false, message: err.message });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+/**
+ * Toggle dislike for a recipe - Compatible with both user and chef authentication
+ */
+async function dislikeRecipeController(req, res) {
+  try {
+    const recipeId = req.params.id;
+    
+    // For compatibility with both user and chef authentication
+    const userId = req.userId || (req.chef && req.chef._id);
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+    
+    // Create a user object that has _id property (needed by toggleDislikeRecipe)
+    const user = { _id: userId };
+    
+    // Use the business logic function
+    const result = await toggleDislikeRecipe(recipeId, user);
+    
+    return res.status(200).json({
+      success: true,
+      message: result.disliked ? 'Recipe disliked successfully' : 'Recipe undisliked successfully',
+      data: {
+        liked: result.liked,
+        disliked: result.disliked,
+        likeCount: result.recipe.likes.length,
+        dislikeCount: result.recipe.dislikes.length
+      }
+    });
+  } catch (err) {
+    console.error('Dislike recipe error:', err);
+    
+    // Return appropriate status code based on error type
+    if (err.message === 'Recipe not found') {
+      return res.status(404).json({ success: false, message: err.message });
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+/**
+ * Get most liked recipes
+ */
+async function getMostLikedRecipesController(req, res) {
+  try {
+    // Get limit parameter from query or default to 10
+    const limit = parseInt(req.query.limit) || 10;
+    
+    // Get most liked recipes
+    const recipes = await getMostLikedRecipes(limit);
+    
+    return res.status(200).json({
+      success: true,
+      count: recipes.length,
+      data: recipes
+    });
+  } catch (err) {
+    console.error('Error fetching most liked recipes:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+/**
+ * Check if a user has liked/disliked a recipe - Compatible with both user and chef authentication
+ */
+async function getRecipeLikeStatusController(req, res) {
+  try {
+    const recipeId = req.params.id;
+    
+    // For compatibility with both user and chef authentication
+    const userId = req.userId || (req.chef && req.chef._id);
+    
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+    
+    // Find the recipe
+    const recipe = await Recipe.findById(recipeId);
+    if (!recipe) {
+      return res.status(404).json({
+        success: false,
+        message: 'Recipe not found'
+      });
+    }
+    
+    // Check like/dislike status
+    const userIdStr = userId.toString();
+    const liked = recipe.likes.some(id => id.toString() === userIdStr);
+    const disliked = recipe.dislikes.some(id => id.toString() === userIdStr);
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        liked,
+        disliked,
+        likeCount: recipe.likes.length,
+        dislikeCount: recipe.dislikes.length
+      }
+    });
+  } catch (err) {
+    console.error('Error checking like status:', err);
+    return res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+}
+
+// Export all controller functions
 module.exports = { 
   createRecipeController, 
   editRecipeController, 
   deleteRecipeController,
   getRecipeController,
-  getPopularRecipesController
+  getPopularRecipesController,
+  likeRecipeController,
+  dislikeRecipeController,
+  getMostLikedRecipesController,
+  getRecipeLikeStatusController
 };
