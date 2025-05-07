@@ -194,51 +194,67 @@ const {
     }
   }
 
-  const editCommentController = async (req, res) => {
-    const { commentId } = req.params;
-    const { text } = req.body;
-  
+  async function editCommentController(req, res) {
     try {
-      const comment = await Comment.findById(commentId);
-      if (!comment) {
-        return res.status(404).json({ success: false, message: "Comment not found" });
+      const commentId = req.params.commentId;
+      const { text } = req.body;
+      
+      // Ensure comment text is provided
+      if (!text || text.trim() === '') {
+        return res.status(400).json({
+          success: false,
+          message: 'Comment text is required'
+        });
       }
   
-      const userTrying = req.user;
-      const adminTrying = req.admin;
-  
-      const isOwner = userTrying && String(comment.user) === String(userTrying._id);
-      const isAdmin = !!adminTrying;
-  
-      if (!isOwner && !isAdmin) {
-        return res.status(403).json({ success: false, message: "Unauthorized to edit this comment" });
+      // Determine if the request is from admin or regular user
+      const isAdmin = !!req.admin;
+      
+      // Get user ID from either user middleware or admin middleware
+      const userId = req.userId || (req.admin && req.admin._id);
+      
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required'
+        });
       }
   
-      comment.text = text;
-      comment.updatedAt = new Date();
-  
-      if (isAdmin && !isOwner) {
-        comment.adminEdited = true;
-        comment.lastEditedBy = "Admin";
-      } else {
-        comment.adminEdited = false;
-        comment.lastEditedBy = userTrying?.username || "User";
-      }
-  
-      await comment.save();
-  
+      // Create a user object
+      const user = { _id: userId };
+      
+      // Call business logic function
+      const updatedComment = await editComment(commentId, user, text, isAdmin);
+      
       return res.status(200).json({
         success: true,
-        message: "Comment updated successfully",
-        comment
+        message: 'Comment updated successfully',
+        data: updatedComment
       });
-  
     } catch (err) {
-      console.error(err);
-      return res.status(500).json({ success: false, message: "Server error" });
+      console.error('Edit comment error:', err);
+      
+      // Handle specific error types
+      if (err.message === 'Comment not found') {
+        return res.status(404).json({ 
+          success: false, 
+          message: err.message 
+        });
+      }
+      
+      if (err.message.includes('Unauthorized')) {
+        return res.status(403).json({ 
+          success: false, 
+          message: err.message 
+        });
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: err.message
+      });
     }
-  };
-  
+  }
   
   module.exports = {
     addCommentController,
