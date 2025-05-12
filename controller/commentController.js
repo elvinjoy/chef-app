@@ -5,7 +5,7 @@ const {
     getRecipeComments,
     getUserComment,
     editComment
-  } = require('../functions/commentFunction');
+  } = require('../helper/commentFunction');
   const User = require('../model/userModel'); // Add this import
   
   /**

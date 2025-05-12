@@ -1,7 +1,7 @@
 const {
   registerUser,
   loginUser,
-} = require('../functions/userFunction');
+} = require('../helper/userFunction');
 
 // REGISTER CONTROLLER
 const registerController = async (req, res) => {

@@ -1,7 +1,7 @@
 const {
     registerChef,
     loginChef,
-  } = require('../functions/chefFunction');
+  } = require('../helper/chefFunction');
   
   // CHEF REGISTER CONTROLLER
   const registerChefController = async (req, res) => {

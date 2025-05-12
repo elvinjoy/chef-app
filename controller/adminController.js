@@ -1,4 +1,4 @@
-const { adminRegister, adminLogin, deactivateUser, reactivateUser } = require('../functions/adminFunction');
+const { adminRegister, adminLogin, deactivateUser, reactivateUser } = require('../helper/adminFunction');
 
 const adminRegisterController = async (req, res) => {
   const { username, email, password } = req.body;

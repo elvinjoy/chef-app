@@ -5,7 +5,7 @@ const {
     getAllTags,
     deleteCategory,
     deleteTag, // ⬅️ Add this
-  } = require('../functions/categoryTagFunction');
+  } = require('../helper/categoryTagFunction');
   
   // Create Category
   const createCategoryController = async (req, res) => {

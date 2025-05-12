@@ -13,7 +13,7 @@ const {
   toggleLikeRecipe,
   toggleDislikeRecipe,
   getMostLikedRecipes 
-} = require('../functions/recipeFunction');
+} = require('../helper/recipeFunction');
 
 /**
  * Create a new recipe
