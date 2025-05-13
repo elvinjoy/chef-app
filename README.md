@@ -77,4 +77,7 @@ A full-stack Chef Recipe Management Platform that allows users to explore, inter
 
 ```sh
 git clone https://github.com/elvinjoy/chef-app.git
+
 cd chef-app
+
+npm install
